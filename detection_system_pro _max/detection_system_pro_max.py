@@ -11,7 +11,7 @@ def mark(contour):
     center_x = int(M['m10'] / M['m00'])
     center_y = int(M['m01'] / M['m00'])
     cv2.circle(frame_copy, (center_x, center_y), 1, (255, 0, 255), 1)
-    cv2.putText(frame_copy, "[" + str(center_x) + "," + str(center_y) + "]", (center_x, center_y - 10),
+    cv2.putText(frame_copy, "[" + str(center_x-680) + "," + str(center_y-360) + "]", (center_x, center_y - 10),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 1)
 
 # 霍夫检测不同图形
@@ -36,10 +36,10 @@ def detect_color_shapes(img, frame,hsv_img, lower, upper, color_name, import_con
 
     for contour in contours:
         contour_area = cv2.contourArea(contour)
-        if contour_area < area + 1000 and contour_area > area - 1000:
+        if contour_area < area + 2000 and contour_area > area - 2000:
             # param1：这是用于边缘检测的Canny算子的高阈值参数。较高的param1值会导致更少的边缘被检测到，会减少检测到的圆的数量。
             # param2：这是用于确定圆心的累加器阈值参数。较小的param2值会导致更多的累加器投票，因此可能会导致检测到更多的假阳性圆。较大的param2值会导致更少的累加器投票，因此可能会减少检测到的圆的数量。
-            circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=10, param2=20, minRadius=0,
+            circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=100, param1=10, param2=20, minRadius=0,
                                        maxRadius=0)
 
             if circles is not None:
@@ -118,56 +118,57 @@ while open:
     ret, frame = capture.read()
     # 对每一帧进行处理，例如进行目标检测等
 
-    # 逆光补偿
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    l = clahe.apply(l)
-    lab = cv2.merge((l, a, b))
-    frame = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    if frame is not None:
+        # 逆光补偿
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        l = clahe.apply(l)
+        lab = cv2.merge((l, a, b))
+        frame = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
-    # 白色边界填充
-    # top_size, bottom_size, left_size, right_size = (10, 10, 10, 10)  # 边界宽度
-    # frame2 = cv2.copyMakeBorder(frame, top_size, bottom_size, left_size, right_size, cv2.BORDER_CONSTANT,
-    # value=(255, 255, 255))
+        # 白色边界填充
+        # top_size, bottom_size, left_size, right_size = (10, 10, 10, 10)  # 边界宽度
+        # frame2 = cv2.copyMakeBorder(frame, top_size, bottom_size, left_size, right_size, cv2.BORDER_CONSTANT,
+        # value=(255, 255, 255))
 
-    # 灰度图处理
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # 二值化处理
-    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
-    # 提取轮廓
-    contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        # 灰度图处理
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # 二值化处理
+        _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
+        # 提取轮廓
+        contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
-    frame_copy=frame.copy() #画图展示拷贝副本
+        frame_copy=frame.copy() #画图展示拷贝副本
 
-    if contours is not None:
-        for contour in contours:
-            # 面积
-            area = cv2.contourArea(contour)
-            # 边界矩形
-            x, y, w, h = cv2.boundingRect(contour)
-            if area > 10000 and area < 50000 and w / h > 0.8 and w / h < 1.25:
-                # 剪裁可能存在图形的ROI区域
-                frame_ROI = frame[y-5:y + h+5,x-5:x + w+5]
-                # 添加边界检查和非空检查
-                if frame_ROI is not None and frame_ROI.shape[0] > 0 and frame_ROI.shape[1] > 0:
-                    frame_copy=hsv_detect(frame_ROI,frame_copy, contour, area) #进行hsv霍夫检测
+        if contours is not None:
+            for contour in contours:
+                # 面积
+                area = cv2.contourArea(contour)
+                # 边界矩形
+                x, y, w, h = cv2.boundingRect(contour)
+                if area > 8000 and area < 30000 and w / h > 0.8 and w / h < 1.25:
+                    # 剪裁可能存在图形的ROI区域
+                    frame_ROI = frame[y-5:y + h+5,x-5:x + w+5]
+                    # 添加边界检查和非空检查
+                    if frame_ROI is not None and frame_ROI.shape[0] > 0 and frame_ROI.shape[1] > 0:
+                        frame_copy=hsv_detect(frame_ROI,frame_copy, contour, area) #进行hsv霍夫检测
 
 
-    # 获取摄像头的帧率
-    cv2.putText(frame, "FPS:" + str(fps), (20, 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+        # 获取摄像头的帧率
+        cv2.putText(frame, "FPS:" + str(fps), (20, 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
-    # 显示完整图
-    windows_name: str = 'Camera 1080p'
-    # cv2.namedWindow(windows_name, cv2.WINDOW_NORMAL) #窗口大小任意调节
-    cv2.imshow('Video1', thresh)
-    cv2.imshow(windows_name, frame_copy)
+        # 显示完整图
+        windows_name: str = 'Camera 1080p'
+        # cv2.namedWindow(windows_name, cv2.WINDOW_NORMAL) #窗口大小任意调节
+        # cv2.imshow('Video1', thresh)
+        cv2.imshow(windows_name, frame_copy)
 
-    # 写入视频帧
-    out.write(frame_copy)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        out.release()
-        capture.release()
-        cv2.destroyAllWindows()
-        break
+        # 写入视频帧
+        out.write(frame_copy)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            out.release()
+            capture.release()
+            cv2.destroyAllWindows()
+            break
