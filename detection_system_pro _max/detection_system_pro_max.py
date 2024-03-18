@@ -39,7 +39,7 @@ def detect_color_shapes(img, frame,hsv_img, lower, upper, color_name, import_con
         if contour_area < area + 1000 and contour_area > area - 1000:
             # param1：这是用于边缘检测的Canny算子的高阈值参数。较高的param1值会导致更少的边缘被检测到，会减少检测到的圆的数量。
             # param2：这是用于确定圆心的累加器阈值参数。较小的param2值会导致更多的累加器投票，因此可能会导致检测到更多的假阳性圆。较大的param2值会导致更少的累加器投票，因此可能会减少检测到的圆的数量。
-            circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=10, param2=20, minRadius=0,
+            circles = cv2.HoughCircles(edges, cv2.HOUGH_GRADIENT, dp=1, minDist=20, param1=10, param2=40, minRadius=0,
                                        maxRadius=0)
 
             if circles is not None:
@@ -146,7 +146,7 @@ while open:
             area = cv2.contourArea(contour)
             # 边界矩形
             x, y, w, h = cv2.boundingRect(contour)
-            if area > 10000 and area < 50000 and w / h > 0.8 and w / h < 1.25:
+            if area > 10000 and area < 30000 and w / h > 0.8 and w / h < 1.25:
                 # 剪裁可能存在图形的ROI区域
                 frame_ROI = frame[y-5:y + h+5,x-5:x + w+5]
                 # 添加边界检查和非空检查
