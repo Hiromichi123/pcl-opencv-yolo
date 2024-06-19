@@ -126,11 +126,6 @@ while open:
     lab = cv2.merge((l, a, b))
     frame = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
-    # 白色边界填充
-    # top_size, bottom_size, left_size, right_size = (10, 10, 10, 10)  # 边界宽度
-    # frame2 = cv2.copyMakeBorder(frame, top_size, bottom_size, left_size, right_size, cv2.BORDER_CONSTANT,
-    # value=(255, 255, 255))
-
     # 灰度图处理
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # 二值化处理
